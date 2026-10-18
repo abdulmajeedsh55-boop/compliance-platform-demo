@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سجل التدقيق — منصة الرقابة والامتثال</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .audit-filters{ display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+  .audit-filters select, .audit-filters input[type="text"]{ font-family:'IBM Plex Sans Arabic'; font-size:13.5px; padding:9px 14px; border:1px solid var(--gray-400); border-radius:var(--radius-sm); background:#fff; }
+  .audit-filters select:focus, .audit-filters input:focus{ outline:2px solid var(--brand-300); border-color:var(--brand-600); }
+
+  .audit-table-wrap{ padding:8px; }
+  table.audit-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.audit-table th{ text-align:right; background:var(--gray-100); color:var(--gray-700); font-weight:600; font-size:11.5px; padding:10px 16px; border-bottom:1px solid var(--border-strong); white-space:nowrap; }
+  table.audit-table td{ padding:12px 16px; border-bottom:1px solid var(--border); color:var(--text-muted); vertical-align:middle; }
+  table.audit-table tr:last-child td{ border-bottom:none; }
+  table.audit-table td.time{ font-family:'JetBrains Mono',monospace; color:var(--text-faint); font-size:11.5px; white-space:nowrap; }
+  .scope-note{ font-size:12px; color:var(--text-faint); margin-bottom:16px; }
+</style>
+</head>
+<body data-page="audit">
+
+  <div data-include="partials/topnav.html"></div>
+
+  <div class="app-shell">
+    <div data-include="partials/sidebar.html"></div>
+
+    <main class="app-content">
+      <div class="breadcrumb"><a href="dashboard.html">لوحة القيادة</a> / سجل التدقيق</div>
+      <div class="page-head">
+        <div>
+          <h1>سجل التدقيق</h1>
+          <p class="sub" id="scopeNote"></p>
+        </div>
+      </div>
+
+      <div class="audit-filters">
+        <input type="text" id="actorFilter" placeholder="تصفية حسب المستخدم…">
+        <select id="eventTypeFilter">
+          <option value="">كل أنواع الأحداث</option>
+        </select>
+      </div>
+
+      <div class="panel">
+        <div class="audit-table-wrap">
+          <table class="audit-table">
+            <thead><tr><th>الوقت</th><th>المستخدم</th><th>نوع الحدث</th><th>الوصف</th></tr></thead>
+            <tbody id="auditBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div data-include="partials/footer.html"></div>
+
+  <script src="js/persist.js"></script>
+<script src="js/mock-data.js"></script>
+  <script src="js/org-data.js"></script>
+  <script src="js/org-tree.js"></script>
+  <script src="js/permissions.js"></script>
+  <script src="js/personnel-data.js"></script>
+  <script src="js/personnel.js"></script>
+  <script src="js/masking.js"></script>
+  <script src="js/lab-data.js"></script>
+  <script src="js/awareness-data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-rules.js"></script>
+  <script src="js/partials.js"></script>
+  <script src="js/audit-page.js"></script>
+</body>
+</html>

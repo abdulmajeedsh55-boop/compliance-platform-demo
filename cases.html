@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>القضايا الإدارية — منصة الرقابة والامتثال</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .filters-bar{ display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+  .filters-bar input[type="text"]{ flex:1; min-width:200px; font-family:'IBM Plex Sans Arabic'; font-size:13.5px; padding:9px 14px; border:1px solid var(--gray-400); border-radius:var(--radius-sm); background:#fff; }
+  .filters-bar input:focus{ outline:2px solid var(--brand-300); border-color:var(--brand-600); }
+  select.filter-chip{ font-family:'JetBrains Mono',monospace; font-size:11.5px; padding:8px 14px; border-radius:var(--radius-sm); border:1px solid var(--border-strong); background:#fff; color:var(--text-muted); cursor:pointer; }
+  select.filter-chip.on{ background:var(--brand-50); border-color:var(--brand-300); color:var(--brand-700); font-weight:600; }
+
+  .status-tabs{ display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
+  .status-tabs button{ font-size:12.5px; font-family:'IBM Plex Sans Arabic'; padding:7px 14px; border-radius:999px; border:1px solid var(--border); background:#fff; color:var(--text-muted); cursor:pointer; }
+  .status-tabs button.active{ background:var(--gray-800); color:#fff; border-color:var(--gray-800); }
+  .status-tabs button .count{ font-family:'JetBrains Mono',monospace; opacity:.7; margin-right:4px; }
+
+  .pager{ display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-top:1px solid var(--border); font-size:12px; color:var(--text-faint); }
+  .pager .pbtns{ display:flex; gap:6px; }
+  .pager button{ font-family:'JetBrains Mono',monospace; font-size:11.5px; width:28px; height:28px; border-radius:var(--radius-sm); border:1px solid var(--border); background:#fff; color:var(--text-muted); cursor:pointer; }
+  .pager button.active{ background:var(--brand-600); border-color:var(--brand-600); color:#fff; }
+</style>
+</head>
+<body data-page="cases">
+
+  <div data-include="partials/topnav.html"></div>
+
+  <div class="app-shell">
+    <div data-include="partials/sidebar.html"></div>
+
+    <main class="app-content">
+      <div class="breadcrumb"><a href="dashboard.html">لوحة القيادة</a> / القضايا الإدارية</div>
+      <div class="page-head">
+        <div>
+          <h1>القضايا الإدارية</h1>
+          <p class="sub">إدارة الحالات والإجراءات من الفتح حتى الإغلاق — 128 قضية مفتوحة</p>
+        </div>
+        <button class="btn primary" type="button" id="openAddCaseBtn">+ فتح قضية جديدة</button>
+      </div>
+
+      <div class="status-tabs" id="statusTabs"></div>
+
+      <div class="filters-bar">
+        <input type="text" id="searchInput" placeholder="ابحث برقم القضية أو اسم المنسوب…">
+        <select class="filter-chip" id="typeFilter">
+          <option value="">جميع الأنواع</option>
+          <option>مخالفة إدارية</option>
+          <option>تحقيق مبدئي</option>
+          <option>شكوى</option>
+        </select>
+        <select class="filter-chip" id="daysFilter">
+          <option value="">كل الفترات</option>
+          <option value="7">آخر 7 أيام</option>
+          <option value="30">آخر 30 يومًا</option>
+          <option value="90">آخر 90 يومًا</option>
+        </select>
+        <select class="filter-chip" id="branchFilter"><option value="">جميع الفروع</option></select>
+      </div>
+
+      <div class="panel">
+        <table class="data-table">
+          <thead><tr><th>رقم القضية</th><th>المنسوب</th><th>النوع</th><th>الحالة</th><th>المسؤول</th><th>آخر تحديث</th></tr></thead>
+          <tbody id="casesBody"></tbody>
+        </table>
+        <div class="pager" id="pager"></div>
+      </div>
+    </main>
+  </div>
+
+  <div data-include="partials/footer.html"></div>
+
+  <div id="addCaseDialog" style="display:none; position:fixed; inset:0; background:rgba(17,25,39,.5); align-items:center; justify-content:center; z-index:50;">
+    <div style="background:#fff; border-radius:var(--radius-lg); padding:28px; width:100%; max-width:480px;">
+      <h2 style="margin:0 0 16px;">فتح قضية جديدة</h2>
+      <div class="field">
+        <label>المنسوب</label>
+        <select id="addCasePersonnelSelect"></select>
+      </div>
+      <div class="field">
+        <label>نوع القضية</label>
+        <select id="addCaseTypeSelect">
+          <option>مخالفة إدارية</option>
+          <option>تحقيق مبدئي</option>
+          <option>شكوى</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>مستوى الحساسية</label>
+        <select id="addCaseSensitivitySelect">
+          <option>منخفض</option>
+          <option selected>متوسط</option>
+          <option>مرتفع</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>جهة العمل</label>
+        <select id="addCaseUnitSelect"></select>
+      </div>
+      <div class="field">
+        <label>وصف الحالة (إلزامي)</label>
+        <textarea id="addCaseDescriptionInput" rows="3" placeholder="اشرح الواقعة أو سبب فتح القضية" style="width:100%; font-family:'IBM Plex Sans Arabic'; font-size:13.5px; padding:10px 12px; border:1px solid var(--gray-400); border-radius:var(--radius-sm);"></textarea>
+      </div>
+      <p id="addCaseError" style="display:none; color:var(--error-700); font-size:12.5px;"></p>
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button class="btn primary" id="addCaseConfirmBtn" type="button">فتح القضية</button>
+        <button class="btn outline" id="addCaseCancelBtn" type="button">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/persist.js"></script>
+<script src="js/mock-data.js"></script>
+  <script src="js/org-data.js"></script>
+  <script src="js/org-tree.js"></script>
+  <script src="js/permissions.js"></script>
+  <script src="js/personnel-data.js"></script>
+  <script src="js/personnel.js"></script>
+  <script src="js/masking.js"></script>
+  <script src="js/lab-data.js"></script>
+  <script src="js/awareness-data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-rules.js"></script>
+  <script src="js/partials.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/cases.js"></script>
+</body>
+</html>

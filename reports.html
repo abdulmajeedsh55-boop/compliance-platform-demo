@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>التقارير والإحصائيات — منصة الرقابة والامتثال</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .filters-bar{ display:flex; align-items:center; gap:10px; margin-bottom:24px; flex-wrap:wrap; }
+  .filters-bar label{ font-size:12.5px; color:var(--text-muted); display:flex; align-items:center; gap:6px; }
+  .filters-bar input, .filters-bar select{ font-family:'IBM Plex Sans Arabic'; font-size:13px; padding:8px 12px; border:1px solid var(--gray-400); border-radius:var(--radius-sm); background:#fff; }
+  .report-section{ margin-bottom:28px; }
+  .report-section .panel-head{ display:flex; align-items:center; justify-content:space-between; }
+  .breakdown-table td:last-child, .breakdown-table th:last-child{ text-align:left; }
+</style>
+</head>
+<body data-page="reports">
+
+  <div data-include="partials/topnav.html"></div>
+
+  <div class="app-shell">
+    <div data-include="partials/sidebar.html"></div>
+
+    <main class="app-content">
+      <div class="breadcrumb"><a href="dashboard.html">لوحة القيادة</a> / التقارير والإحصائيات</div>
+      <div class="page-head">
+        <div>
+          <h1>التقارير والإحصائيات</h1>
+          <p class="sub">إحصائيات مجمّعة عبر كل الوحدات، قابلة للتصفية والتصدير.</p>
+        </div>
+      </div>
+
+      <div class="filters-bar">
+        <label>من <input type="date" id="fromDate"></label>
+        <label>إلى <input type="date" id="toDate"></label>
+        <label>جهة العمل <select id="unitFilter"><option value="">كل الجهات</option></select></label>
+        <button class="btn outline" id="applyFiltersBtn" type="button">تطبيق</button>
+      </div>
+
+      <div id="reportSections"></div>
+    </main>
+  </div>
+
+  <div data-include="partials/footer.html"></div>
+
+  <script src="js/persist.js"></script>
+<script src="js/mock-data.js"></script>
+  <script src="js/org-data.js"></script>
+  <script src="js/org-tree.js"></script>
+  <script src="js/permissions.js"></script>
+  <script src="js/personnel-data.js"></script>
+  <script src="js/personnel.js"></script>
+  <script src="js/masking.js"></script>
+  <script src="js/lab-data.js"></script>
+  <script src="js/awareness-data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-rules.js"></script>
+  <script src="js/partials.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/reports-page.js"></script>
+</body>
+</html>

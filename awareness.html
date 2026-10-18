@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>التوعية والمعالجة — منصة الرقابة والامتثال</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+</head>
+<body data-page="awareness">
+
+  <div data-include="partials/topnav.html"></div>
+
+  <div class="app-shell">
+    <div data-include="partials/sidebar.html"></div>
+
+    <main class="app-content">
+      <div class="breadcrumb"><a href="dashboard.html">لوحة القيادة</a> / التوعية والمعالجة</div>
+      <div class="page-head">
+        <div>
+          <h1>التوعية والمعالجة</h1>
+          <p class="sub">مسارات الإرشاد والمتابعة للمنسوبين بعد إغلاق قضاياهم.</p>
+        </div>
+        <button class="btn primary" type="button" id="openCreateBtn">+ إنشاء مسار توعية</button>
+      </div>
+
+      <div class="panel">
+        <table class="data-table">
+          <thead><tr><th>رقم المسار</th><th>المنسوب</th><th>القضية</th><th>السبب</th><th>الحالة</th></tr></thead>
+          <tbody id="tracksBody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div data-include="partials/footer.html"></div>
+
+  <div id="createDialog" style="display:none; position:fixed; inset:0; background:rgba(17,25,39,.5); align-items:center; justify-content:center; z-index:50;">
+    <div style="background:#fff; border-radius:var(--radius-lg); padding:24px; width:100%; max-width:420px;">
+      <h2 style="margin:0 0 12px;">إنشاء مسار توعية</h2>
+      <div class="field">
+        <label>المنسوب</label>
+        <select id="createPersonnelSelect"></select>
+      </div>
+      <div class="field">
+        <label>القضية (اختياري)</label>
+        <select id="createCaseSelect"><option value="">— بدون ربط بقضية —</option></select>
+      </div>
+      <div class="field">
+        <label>السبب</label>
+        <input type="text" id="createReasonInput" placeholder="مثال: متابعة سلوكية بعد إغلاق القضية">
+      </div>
+      <p id="createError" style="display:none; color:var(--error-700); font-size:12.5px;"></p>
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button class="btn primary" id="createConfirmBtn" type="button">إنشاء</button>
+        <button class="btn outline" id="createCancelBtn" type="button">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="detailDialog" style="display:none; position:fixed; inset:0; background:rgba(17,25,39,.5); align-items:center; justify-content:center; z-index:50;">
+    <div style="background:#fff; border-radius:var(--radius-lg); padding:24px; width:100%; max-width:480px; max-height:85vh; overflow-y:auto;">
+      <h2 id="detailTitle" style="margin:0 0 12px;"></h2>
+
+      <div class="field">
+        <label>تغيير الحالة</label>
+        <select id="statusSelect">
+          <option>نشط</option>
+          <option>مكتمل</option>
+          <option>متوقف</option>
+        </select>
+        <input type="text" id="statusReasonInput" placeholder="سبب تغيير الحالة" style="margin-top:8px;">
+        <button class="btn outline" id="statusSaveBtn" type="button" style="margin-top:8px;">حفظ الحالة</button>
+      </div>
+
+      <h2 style="margin:16px 0 8px; font-size:13.5px;">جلسات المتابعة</h2>
+      <div id="sessionsList" style="font-size:12.5px; color:var(--text-muted); margin-bottom:8px;"></div>
+      <div class="field">
+        <label>ملاحظات الجلسة</label>
+        <input type="text" id="sessionNotesInput" placeholder="ملاحظات">
+        <label style="display:flex; align-items:center; gap:6px; margin-top:8px; font-weight:400;"><input type="checkbox" id="sessionAttendedCheckbox" checked> حضر المنسوب</label>
+        <button class="btn outline" id="sessionAddBtn" type="button" style="margin-top:8px;">إضافة جلسة</button>
+      </div>
+
+      <h2 style="margin:16px 0 8px; font-size:13.5px;">التقييم الختامي</h2>
+      <div id="evaluationDisplay" style="font-size:12.5px; color:var(--text-muted); margin-bottom:8px;"></div>
+      <div class="field">
+        <label>التقييم</label>
+        <input type="text" id="evalRatingInput" placeholder="مثال: نجاح المسار">
+        <input type="text" id="evalNotesInput" placeholder="ملاحظات ختامية" style="margin-top:8px;">
+        <button class="btn primary" id="evalSaveBtn" type="button" style="margin-top:8px;">حفظ التقييم وإغلاق المسار</button>
+      </div>
+
+      <p id="detailError" style="display:none; color:var(--error-700); font-size:12.5px; margin-top:10px;"></p>
+      <button class="btn outline" id="detailCloseBtn" type="button" style="margin-top:16px;">إغلاق</button>
+    </div>
+  </div>
+
+  <script src="js/persist.js"></script>
+<script src="js/mock-data.js"></script>
+  <script src="js/org-data.js"></script>
+  <script src="js/org-tree.js"></script>
+  <script src="js/permissions.js"></script>
+  <script src="js/personnel-data.js"></script>
+  <script src="js/personnel.js"></script>
+  <script src="js/masking.js"></script>
+  <script src="js/lab-data.js"></script>
+  <script src="js/awareness-data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-rules.js"></script>
+  <script src="js/partials.js"></script>
+  <script src="js/awareness-page.js"></script>
+</body>
+</html>

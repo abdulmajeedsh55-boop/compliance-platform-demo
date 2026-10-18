@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS-2026-0148 — منصة الرقابة والامتثال</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .detail-grid{ display:grid; grid-template-columns:1fr 320px; gap:24px; align-items:start; }
+  @media (max-width:920px){ .detail-grid{ grid-template-columns:1fr; } }
+
+  .info-list{ display:grid; grid-template-columns:1fr 1fr; gap:18px 24px; padding:20px; }
+  @media (max-width:520px){ .info-list{ grid-template-columns:1fr; } }
+  .info-item .k{ font-size:11px; color:var(--text-faint); margin-bottom:5px; font-family:'JetBrains Mono',monospace; }
+  .info-item .v{ font-size:13.5px; color:var(--text-default); font-weight:500; }
+
+  .timeline{ padding:20px; display:flex; flex-direction:column; }
+  .tl-item{ display:flex; gap:14px; position:relative; padding-bottom:22px; }
+  .tl-item:last-child{ padding-bottom:0; }
+  .tl-item::before{ content:""; position:absolute; top:20px; bottom:0; right:9px; width:1px; background:var(--border); }
+  .tl-item:last-child::before{ display:none; }
+  .tl-dot{ width:20px; height:20px; border-radius:50%; background:var(--brand-50); border:2px solid var(--brand-600); flex-shrink:0; position:relative; z-index:1; }
+  .tl-dot.neutral{ background:var(--gray-100); border-color:var(--gray-400); }
+  .tl-body b{ display:block; font-size:13px; margin-bottom:2px; }
+  .tl-body span{ font-size:12px; color:var(--text-faint); }
+  .tl-body time{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); display:block; margin-top:3px; }
+
+  .side-panel{ margin-bottom:20px; }
+  .side-panel .panel-body{ padding:16px 20px; }
+  .side-panel .field-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:12.5px; }
+  .side-panel .field-row:last-child{ border-bottom:none; }
+  .side-panel .field-row .k{ color:var(--text-faint); }
+  .side-panel .field-row .v{ font-weight:600; }
+
+  .attach-item{ display:flex; align-items:center; gap:10px; padding:10px 20px; border-top:1px solid var(--border); font-size:12.5px; }
+  .attach-item:first-child{ border-top:none; }
+  .attach-item .fi{ width:28px; height:28px; border-radius:6px; background:var(--gray-100); display:flex; align-items:center; justify-content:center; font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--gray-700); flex-shrink:0; }
+  .attach-item .name{ flex:1; min-width:0; }
+  .attach-item .size{ color:var(--text-faint); font-family:'JetBrains Mono',monospace; font-size:11px; }
+
+  .action-bar{ display:flex; gap:10px; margin-top:24px; padding-top:24px; border-top:1px solid var(--border); }
+
+  .step{ display:none; }
+  .step.active{ display:block; }
+</style>
+</head>
+<body data-page="case-detail">
+
+  <div data-include="partials/topnav.html"></div>
+
+  <div class="app-shell">
+    <div data-include="partials/sidebar.html"></div>
+
+    <main class="app-content">
+      <div class="breadcrumb"><a href="dashboard.html">لوحة القيادة</a> / <a href="cases.html">القضايا الإدارية</a> / <span id="crumbCaseId">—</span></div>
+      <div class="page-head">
+        <div>
+          <h1 class="mono" style="font-size:24px" id="caseIdHeading">—</h1>
+          <p class="sub" id="caseSubline">—</p>
+          <span class="tag" id="sourceBadge" style="font-size:11px; padding:4px 10px; margin-top:8px; display:inline-flex;"></span>
+        </div>
+        <span class="tag" id="statusTag" style="font-size:13px; padding:7px 14px"><span class="dot"></span> <span id="statusTagLabel">—</span></span>
+      </div>
+      <div id="syncStatusBanner" style="display:none; background:var(--warn-50); border:1px solid var(--warn-200); color:var(--warn-700); border-radius:var(--radius-sm); padding:10px 16px; font-size:12.5px; margin-bottom:16px;"></div>
+
+      <div class="tabs">
+        <a href="#" class="active">التفاصيل</a>
+        <a href="#">الإجراءات</a>
+        <a href="#">المرفقات <span class="mono" style="font-size:11px">(3)</span></a>
+        <a href="#">سجل التدقيق</a>
+      </div>
+
+      <div class="detail-grid">
+        <div>
+          <div class="panel">
+            <div class="panel-head"><h2>بيانات القضية</h2></div>
+            <div class="info-list">
+              <div class="info-item"><div class="k">نوع القضية</div><div class="v" id="infoType">—</div></div>
+              <div class="info-item"><div class="k">الجهة المُبلِغة</div><div class="v" id="infoReportingEntity">—</div></div>
+              <div class="info-item"><div class="k">المسؤول الحالي</div><div class="v" id="infoOfficer">—</div></div>
+              <div class="info-item"><div class="k">تاريخ الفتح</div><div class="v" id="infoOpenedDate">—</div></div>
+              <div class="info-item"><div class="k">المهلة النظامية</div><div class="v" id="infoDeadline">—</div></div>
+              <div class="info-item"><div class="k">مستوى الحساسية</div><div class="v" id="infoSensitivity">—</div></div>
+              <div class="info-item" id="infoDescriptionItem" style="grid-column:1/-1; display:none;"><div class="k">وصف الحالة</div><div class="v" id="infoDescription" style="font-weight:400;">—</div></div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top:20px">
+            <div class="panel-head"><h2>الجدول الزمني</h2></div>
+            <div class="timeline" id="timeline"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel side-panel">
+            <div class="panel-head"><h2>ملخّص</h2></div>
+            <div class="panel-body">
+              <div class="field-row"><span class="k">رقم المنسوب</span><span class="v mono" id="personnelId">—</span></div>
+              <div class="field-row"><span class="k">الرتبة</span><span class="v" id="personnelRank">—</span></div>
+              <div class="field-row"><span class="k">جهة العمل</span><span class="v" id="personnelBranch">—</span></div>
+              <div class="field-row"><span class="k">القضايا السابقة</span><span class="v" id="personnelPriorCases">—</span></div>
+            </div>
+          </div>
+
+          <div class="panel side-panel" id="linkedPanel" style="display:none">
+            <div class="panel-head"><h2>مرتبط بهذه القضية</h2></div>
+            <div class="panel-body" id="linkedList"></div>
+          </div>
+
+          <div class="panel side-panel" id="verdictPanel" style="display:none">
+            <div class="panel-head"><h2>لوحة الحكم والجزاء</h2></div>
+            <div class="panel-body">
+              <div class="field-row"><span class="k">نوع الحكم</span><span class="v" id="verdictType">—</span></div>
+              <div class="field-row"><span class="k">نوع الجزاء</span><span class="v" id="verdictPenaltyType">—</span></div>
+              <div class="field-row"><span class="k">وصف الجزاء</span><span class="v" id="verdictPenaltyDescription">—</span></div>
+              <div class="field-row"><span class="k">تاريخ الصدور</span><span class="v" id="verdictIssuedDate">—</span></div>
+              <div class="field-row"><span class="k">الجهة المُصدِرة</span><span class="v" id="verdictIssuingAuthority">—</span></div>
+              <div class="field-row"><span class="k">المستند الرسمي</span><span class="v mono" id="verdictDocument">—</span></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h2>المرفقات</h2></div>
+            <div id="attachmentsList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn primary" id="approveBtn" type="button">اعتماد القضية</button>
+        <button class="btn danger" id="rejectBtn" type="button">رفض القضية</button>
+        <button class="btn neutral" id="escalateBtn" type="button">تصعيد</button>
+        <a href="cases.html" class="btn outline">رجوع للقائمة</a>
+      </div>
+      <div id="decisionDialog" style="display:none; position:fixed; inset:0; background:rgba(17,25,39,.5); align-items:center; justify-content:center; z-index:50;">
+        <div style="background:#fff; border-radius:var(--radius-lg); padding:24px; width:100%; max-width:420px; max-height:85vh; overflow-y:auto;">
+          <h3 id="decisionDialogTitle" style="margin:0 0 12px;">تأكيد القرار</h3>
+
+          <div class="step active" id="decisionStep1">
+            <div class="field">
+              <label>السبب (إلزامي)</label>
+              <textarea id="decisionReason" rows="3" style="width:100%; font-family:'IBM Plex Sans Arabic'; font-size:13.5px; padding:10px 12px; border:1px solid var(--gray-400); border-radius:var(--radius-sm);"></textarea>
+            </div>
+          </div>
+
+          <div class="step" id="decisionStep2">
+            <div class="field">
+              <label>نوع الحكم</label>
+              <select id="verdictTypeInput">
+                <option>مخالفة ثابتة</option>
+                <option>مخالفة ثابتة جزئياً</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>نوع الجزاء</label>
+              <select id="verdictPenaltyTypeInput">
+                <option>إنذار</option>
+                <option>خصم من الراتب</option>
+                <option>إيقاف عن العمل</option>
+                <option>إحالة للتقاعد</option>
+                <option>فصل</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>وصف الجزاء</label>
+              <input type="text" id="verdictPenaltyDescriptionInput" placeholder="تفاصيل الجزاء">
+            </div>
+            <div class="field">
+              <label>تاريخ الصدور</label>
+              <input type="date" id="verdictIssuedDateInput">
+            </div>
+            <div class="field">
+              <label>الجهة المُصدِرة</label>
+              <input type="text" id="verdictIssuingAuthorityInput" placeholder="مثال: لجنة الانضباط الإداري">
+            </div>
+            <div class="field">
+              <label>رقم/اسم المستند (اختياري)</label>
+              <input type="text" id="verdictDocumentInput" placeholder="قرار-الحكم.pdf">
+            </div>
+          </div>
+
+          <p id="decisionError" style="display:none; color:var(--error-700); font-size:12.5px;"></p>
+          <div style="display:flex; gap:10px; margin-top:12px;">
+            <button class="btn outline" id="decisionBackBtn" type="button" style="display:none;">رجوع</button>
+            <button class="btn primary" id="decisionNextBtn" type="button" style="display:none;">التالي</button>
+            <button class="btn primary" id="decisionConfirmBtn" type="button">تأكيد</button>
+            <button class="btn outline" id="decisionCancelBtn" type="button">إلغاء</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div data-include="partials/footer.html"></div>
+
+  <script src="js/persist.js"></script>
+<script src="js/mock-data.js"></script>
+  <script src="js/org-data.js"></script>
+  <script src="js/org-tree.js"></script>
+  <script src="js/permissions.js"></script>
+  <script src="js/personnel-data.js"></script>
+  <script src="js/personnel.js"></script>
+  <script src="js/masking.js"></script>
+  <script src="js/lab-data.js"></script>
+  <script src="js/awareness-data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-rules.js"></script>
+  <script src="js/partials.js"></script>
+  <script src="js/format.js"></script>
+  <script src="js/case-detail.js"></script>
+</body>
+</html>

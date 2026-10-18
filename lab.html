@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>التحاليل المخبرية — منصة الرقابة والامتثال</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Libre+Barcode+39&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<style>
+  #printArea{ display:none; }
+  @media print {
+    body > *:not(#printArea){ display:none !important; }
+    #printArea{ display:block !important; }
+  }
+  .barcode-label{ display:inline-block; margin:10px; text-align:center; page-break-inside:avoid; }
+  .barcode-label .bars{ font-family:'Libre Barcode 39', cursive; font-size:30px; line-height:1; white-space:nowrap; direction:ltr; }
+  .barcode-label .code{ font-family:'JetBrains Mono',monospace; font-size:13px; margin-top:4px; }
+  .manifest-page{ page-break-before:always; padding:20px; }
+  .manifest-page table{ width:100%; border-collapse:collapse; margin-top:16px; }
+  .manifest-page th, .manifest-page td{ border:1px solid #999; padding:8px 12px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:13px; }
+  .manifest-page td.name-cell{ height:32px; }
+</style>
+</head>
+<body data-page="lab">
+
+  <div data-include="partials/topnav.html"></div>
+
+  <div class="app-shell">
+    <div data-include="partials/sidebar.html"></div>
+
+    <main class="app-content">
+      <div class="breadcrumb"><a href="dashboard.html">لوحة القيادة</a> / التحاليل المخبرية</div>
+      <div class="page-head">
+        <div>
+          <h1>التحاليل المخبرية</h1>
+          <p class="sub">طلب الفحوصات المرتبطة بالقضايا أو بالمنسوبين مباشرة، وتتبع حالتها حتى تسجيل النتيجة.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn outline" type="button" id="openPrintBatchBtn">طباعة دفعة أرقام عينات</button>
+          <button class="btn outline" type="button" id="openRegisterScanBtn">تسجيل عينة ممسوحة</button>
+          <button class="btn primary" type="button" id="openRequestBtn">+ طلب فحص جديد</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <table class="data-table">
+          <thead><tr><th>رقم الفحص</th><th>المنسوب</th><th>القضية</th><th>نوع الفحص</th><th>الحالة</th><th>تاريخ الطلب</th></tr></thead>
+          <tbody id="labBody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <div data-include="partials/footer.html"></div>
+
+  <div id="requestDialog" style="display:none; position:fixed; inset:0; background:rgba(17,25,39,.5); align-items:center; justify-content:center; z-index:50;">
+    <div style="background:#fff; border-radius:var(--radius-lg); padding:32px; width:100%; max-width:560px;">
+      <h2 style="margin:0 0 16px;">طلب فحص جديد</h2>
+      <div class="field">
+        <label>المنسوب</label>
+        <select id="reqPersonnelSelect"></select>
+      </div>
+      <div class="field">
+        <label>القضية (اختياري)</label>
+        <select id="reqCaseSelect"><option value="">— بدون ربط بقضية —</option></select>
+      </div>
+      <div class="field">
+        <label>نوع الفحص</label>
+        <select id="reqTypeInput">
+          <option>تحليل عينة دم</option>
+          <option>تحليل بول</option>
+          <option>فحص المخدرات</option>
+          <option>تحليل DNA</option>
+          <option>فحص خط اليد / التوقيع</option>
+          <option>تحليل مستندات مخبري</option>
+        </select>
+      </div>
+      <p id="reqError" style="display:none; color:var(--error-700); font-size:12.5px;"></p>
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button class="btn primary" id="reqConfirmBtn" type="button">طلب</button>
+        <button class="btn outline" id="reqCancelBtn" type="button">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="printBatchDialog" style="display:none; position:fixed; inset:0; background:rgba(17,25,39,.5); align-items:center; justify-content:center; z-index:50;">
+    <div style="background:#fff; border-radius:var(--radius-lg); padding:32px; width:100%; max-width:420px;">
+      <h2 style="margin:0 0 16px;">طباعة دفعة أرقام عينات</h2>
+      <div class="field">
+        <label>عدد العينات</label>
+        <input type="number" id="printBatchCountInput" min="1" max="200" value="10">
+      </div>
+      <p style="font-size:12.5px; color:var(--text-muted);">تُطبع أرقام العينات كباركود Code 39 بدون ربطها بمنسوب — اربطها لاحقًا عبر "تسجيل عينة ممسوحة" بعد جمع العينات ميدانيًا.</p>
+      <p id="printBatchError" style="display:none; color:var(--error-700); font-size:12.5px;"></p>
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button class="btn primary" id="printBatchConfirmBtn" type="button">طباعة</button>
+        <button class="btn outline" id="printBatchCancelBtn" type="button">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="registerScanDialog" style="display:none; position:fixed; inset:0; background:rgba(17,25,39,.5); align-items:center; justify-content:center; z-index:50;">
+    <div style="background:#fff; border-radius:var(--radius-lg); padding:32px; width:100%; max-width:560px;">
+      <h2 style="margin:0 0 16px;">تسجيل عينة ممسوحة</h2>
+      <div class="field">
+        <label>رقم العينة (امسح الباركود هنا)</label>
+        <input type="text" id="scanSampleIdInput" placeholder="SMP-000001" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>المنسوب</label>
+        <select id="scanPersonnelSelect"></select>
+      </div>
+      <div class="field">
+        <label>القضية (اختياري)</label>
+        <select id="scanCaseSelect"><option value="">— بدون ربط بقضية —</option></select>
+      </div>
+      <div class="field">
+        <label>نوع الفحص</label>
+        <select id="scanTypeInput">
+          <option>تحليل عينة دم</option>
+          <option>تحليل بول</option>
+          <option>فحص المخدرات</option>
+          <option>تحليل DNA</option>
+          <option>فحص خط اليد / التوقيع</option>
+          <option>تحليل مستندات مخبري</option>
+        </select>
+      </div>
+      <p id="scanError" style="display:none; color:var(--error-700); font-size:12.5px;"></p>
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button class="btn primary" id="scanConfirmBtn" type="button">تسجيل</button>
+        <button class="btn outline" id="scanCancelBtn" type="button">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="printArea"></div>
+
+  <div id="detailDialog" style="display:none; position:fixed; inset:0; background:rgba(17,25,39,.5); align-items:center; justify-content:center; z-index:50;">
+    <div style="background:#fff; border-radius:var(--radius-lg); padding:28px; width:100%; max-width:520px; max-height:85vh; overflow-y:auto;">
+      <h2 id="detailTitle" style="margin:0 0 12px;"></h2>
+      <div class="field">
+        <label>الحالة</label>
+        <select id="detailStatusSelect">
+          <option>قيد الانتظار</option>
+          <option>جارٍ التنفيذ</option>
+          <option>مكتمل</option>
+          <option>ملغى</option>
+        </select>
+        <button class="btn outline" id="detailStatusBtn" type="button" style="margin-top:8px;">حفظ الحالة</button>
+      </div>
+
+      <div id="stageResult">
+        <h2 style="margin:16px 0 8px; font-size:13.5px;">١. تسجيل النتيجة (فني مختبر)</h2>
+        <div id="resultStatusDisplay" style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;"></div>
+        <div id="resultForm">
+          <div class="field">
+            <label>النتيجة</label>
+            <input type="text" id="detailResultInput" placeholder="نتيجة الفحص">
+          </div>
+          <div class="field">
+            <label>اسم المرفق (اختياري)</label>
+            <input type="text" id="detailAttachmentInput" placeholder="تقرير-الفحص.pdf">
+            <button class="btn primary" id="detailResultBtn" type="button" style="margin-top:8px;">تسجيل النتيجة</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="stageReview" style="display:none;">
+        <h2 style="margin:16px 0 8px; font-size:13.5px;">٢. مراجعة النتيجة (مدير شعبة الفحوص)</h2>
+        <div id="reviewStatusDisplay" style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;"></div>
+        <div id="reviewForm" class="field">
+          <label>ملاحظات المراجعة (اختياري)</label>
+          <input type="text" id="reviewNotesInput" placeholder="ملاحظات">
+          <button class="btn outline" id="reviewBtn" type="button" style="margin-top:8px;">مراجعة</button>
+        </div>
+      </div>
+
+      <div id="stageApprove" style="display:none;">
+        <h2 style="margin:16px 0 8px; font-size:13.5px;">٣. اعتماد النتيجة (مدير الإدارة)</h2>
+        <div id="approveStatusDisplay" style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;"></div>
+        <button class="btn primary" id="approveBtn" type="button" style="margin-bottom:12px;">اعتماد</button>
+      </div>
+
+      <h2 style="margin:16px 0 8px; font-size:13.5px;">سلسلة الحيازة</h2>
+      <div id="detailCustodyList" style="font-size:12.5px; color:var(--text-muted);"></div>
+      <p id="detailError" style="display:none; color:var(--error-700); font-size:12.5px; margin-top:10px;"></p>
+      <div style="margin-top:16px;">
+        <button class="btn outline" id="detailCloseBtn" type="button">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/persist.js"></script>
+<script src="js/mock-data.js"></script>
+  <script src="js/org-data.js"></script>
+  <script src="js/org-tree.js"></script>
+  <script src="js/permissions.js"></script>
+  <script src="js/personnel-data.js"></script>
+  <script src="js/personnel.js"></script>
+  <script src="js/masking.js"></script>
+  <script src="js/lab-data.js"></script>
+  <script src="js/awareness-data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-rules.js"></script>
+  <script src="js/partials.js"></script>
+  <script src="js/lab-page.js"></script>
+</body>
+</html>
